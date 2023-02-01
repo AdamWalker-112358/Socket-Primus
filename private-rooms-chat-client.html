@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Echo</title>
+  <link rel="stylesheet" href="http://cdn.jsdelivr.net/normalize/3.0.1/normalize.min.css">
+  <script src="/primus/primus.js"></script>
+  <style>
+      body { padding: 50px }
+      .main{
+          display:flex;
+      }
+      .write-form{
+        display:flex;
+        flex-direction:column;
+        border:solid 1px grey;
+        background: linear-gradient(180deg, rgb(238, 238, 238), rgb(204, 204, 204));
+        padding:15px;
+        justify-content: center;
+        border-radius: 5px;
+        flex:1;
+      }
+      .bottom-box{
+        display:flex;
+        justify-content: space-between;
+      }
+      .output {
+        border: solid 1px grey ;
+        border-radius: 5px;
+        flex-basis: 200px;
+        padding: 10px;
+        margin: 0 0 8px
+      }
+      .input {
+        flex:1 1;
+        height: 28px;
+        font-size: 16px ;
+        border-radius: 5px;
+        border:solid 1px grey;
+        padding-left: 10px;
+        margin-right: 10px;
+      }
+      .channels{
+        display:flex;
+        flex-direction:column;
+      }
+      .channel{
+        margin: 0 0 10px 10px;
+      }
+      button {
+        border-radius: 5px;
+        border: 0;
+        background: #444;
+        color: #FFF;
+        padding: 6px;
+      }
+
+      .typing {
+        color: rgb(224, 126, 126);
+        padding: 20px;
+      }
+  </style>
+</head>
+<body>
+  <div class="main">
+    <div>
+      <form class="write-form">
+        <textarea class="output" readonly></textarea>
+        <div class="bottom-box">
+          <input placeholder="write a message..." class="input" />
+          <button type="submit" id="sub">Send</button>
+        </div>
+      </form>
+      <div class="typing"></div>
+    </div>
+    <div class="channels">
+        <button class="channel" data-room="news">News</button>
+        <button class="channel" data-room="random">Random</button>
+        <button class="channel" data-room="tech">Tech</button>
+    </div>
+  </div>
+
+  <script>
+      const $ = (selector, parent = document) => parent.querySelector(selector);
+      const $$ = (selector, parent = document) => parent.querySelectorAll(selector);
+
+      const output = $('.output')
+      const input = $('.input');
+      const write_form = $('.write-form');
+      const channels = $('.channels');
+      const typing = $('.typing')
+
+      // const btn = $('button#sub');
+      // btn.textContent = 'Do Something';
+
+      let currentRoom = 'general';
+      let lastEventTime = Date.now()
+
+      // Send message when typing starts / stops
+      input.addEventListener('input', (event) => {
+        console.log('typing start')
+        primus.write({typing:true})
+        lastEventTime = Date.now()
+       
+
+        setTimeout( () => {
+          if (Date.now() - lastEventTime > 2000) {
+            primus.write({typing:false})
+            console.log('typing stopped')
+          }
+        } ,[2000])
+      })
+
+
+
+
+      // Tell primus to create a new connect to the current domain/port/protocol
+      const primus = new Primus();
+      // Listen for incoming data and log it in our textarea.
+      primus.on('data', data => {
+        if (data.typing == undefined) output.value += `${data}\n`
+        if (data.typing) typing.textContent = (`${data.id.split('-')[0]} is typing ...`)
+        if (data.typing == false) typing.textContent = ''
+      });
+
+
+      // Listen for submits of the form so we can send the message to the server.
+      write_form.onsubmit = event => {
+        // Write the typed message.
+        //primus.write(input.value);
+        primus.write({ room: currentRoom, message: input.value });
+        input.value = '';
+
+        event.preventDefault();
+      };
+
+      channels.onclick = event => {
+        console.log(event.target.textContent,'clicked');
+        //set the client room...
+        currentRoom = event.target.dataset.room;
+        // Send request to join the news room
+        primus.write({ action: 'join', room: currentRoom });
+      }
+      
+  </script>
+</body>
+</html>

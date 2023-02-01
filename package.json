@@ -1,0 +1,27 @@
+{
+  "name": "chat-primus-sock-js",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "chat:public": "nodemon public-chat-server.js",
+    "chat:private": "nodemon private-rooms-chat-server.js"
+  },
+  "keywords": [],
+  "author": "Yariv Gilad <yariv.gilad@gmail.com> (https://yarivgilad.com)",
+  "license": "ISC",
+  "dependencies": {
+    "@ajar/marker": "^1.2.3",
+    "dotenv": "^6.2.0",
+    "express": "^4.17.1",
+    "morgan": "^1.9.1",
+    "primus": "^7.3.4",
+    "primus-rooms": "^3.4.1",
+    "socket.io": "^2.3.0",
+    "sockjs": "^0.3.19",
+    "sockjs-client": "^1.4.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.2"
+  }
+}
